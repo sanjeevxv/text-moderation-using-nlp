@@ -1,0 +1,1 @@
+web: gunicorn safenet.wsgi:application --log-file -

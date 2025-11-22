@@ -1,0 +1,72 @@
+services:
+  - type: web
+    name: safenet
+    runtime: python
+    region: oregon
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: gunicorn safenet.wsgi:application --bind 0.0.0.0:$PORT
+
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+
+      - key: DJANGO_DEBUG
+        value: "false"
+
+      - key: DJANGO_ALLOWED_HOSTS
+        value: safe-net.onrender.com
+
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://safe-net.onrender.com
+
+      - key: DJANGO_TIME_ZONE
+        value: Asia/Kolkata
+
+      - key: DJANGO_LANGUAGE_CODE
+        value: en-us
+
+      # ---- Supabase ----
+      - key: SUPABASE_URL
+        value: ${SUPABASE_URL}
+
+      - key: SUPABASE_ANON_KEY
+        value: ${SUPABASE_ANON_KEY}
+
+      - key: SUPABASE_SERVICE_KEY
+        value: ${SUPABASE_SERVICE_KEY}
+
+      - key: SUPABASE_JWT_SECRET
+        value: ${SUPABASE_JWT_SECRET}
+
+      - key: DJANGO_SUPABASE_AUTH_ENABLED
+        value: "true"
+
+      # ---- Pinecone ----
+      - key: PINECONE_API_KEY
+        value: ${PINECONE_API_KEY}
+
+      # ---- HuggingFace ----
+      - key: HF_API_KEY
+        value: ${HF_API_KEY}
+
+      - key: HF_USERNAME
+        value: vansh-here
+
+      # ---- Gemini ----
+      # - key: GEMINI_API_KEY
+      #   value: ${GEMINI_API_KEY}
+
+      # ---- Render config ----
+      - key: PORT
+        value: "8000"
+
+      - key: WEB_CONCURRENCY
+        value: "2"
+
+      # ---- Static files ----
+      - key: STATIC_ROOT
+        value: staticfiles
