@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{% url 'dashboard_home' %}" class="btn btn-light border rounded-pill shadow-sm px-3">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+
+    <h2 class="fw-bold mb-0 text-dark">
+        <i class="fas fa-history me-2 text-primary"></i>Audit Logs
+    </h2>
+
+    <div></div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row gy-2 gx-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Action</label>
+                {{ form.action }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Start date</label>
+                {{ form.start_date }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">End date</label>
+                {{ form.end_date }}
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100 shadow-sm">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+            </div>
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width:150px;">Time</th>
+                        <th>User</th>
+                        <th style="width:150px;">Action</th>
+                        <th>Content</th>
+                        <th style="width:200px;">Moderation Reasons</th>
+                        <th style="width:220px;">Notes</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+
+                        <!-- Time -->
+                        <td>
+                            <span class="small text-muted">
+                                {{ log.timestamp_ist|date:"d M Y, h:i A" }} IST
+                            </span>
+                        </td>
+
+                        <!-- User -->
+                        <td>
+                            <i class="fas fa-user-circle text-secondary me-1"></i>
+                            <span class="fw-semibold">{{ log.user.username }}</span>
+                        </td>
+
+                        <!-- ACTION BADGES (STRICT RULES) -->
+                        <td>
+    {% if log.action == "allow" %}
+        <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
+            <i class="fas fa-check me-1"></i> Allow
+        </span>
+
+    {% elif log.action == "ban" %}
+        <span class="badge rounded-pill bg-danger px-3 py-2 shadow-sm">
+            <i class="fas fa-ban me-1"></i> Ban
+        </span>
+
+    {% elif log.action == "approved" %}
+        <span class="badge rounded-pill bg-success px-3 py-2 shadow-sm">
+            <i class="fas fa-check-circle me-1"></i> Approved
+        </span>
+
+    {% elif log.action == "banned" %}
+        <span class="badge rounded-pill bg-danger px-3 py-2 shadow-sm">
+            <i class="fas fa-times-circle me-1"></i> Rejected
+        </span>
+
+    {% elif log.action == "review" or log.action == "reviewed" %}
+        <span class="badge rounded-pill bg-warning text-dark px-3 py-2 shadow-sm">
+            <i class="fas fa-exclamation-circle me-1"></i> Review
+        </span>
+
+    {% else %}
+        <span class="badge rounded-pill bg-secondary px-3 py-2 shadow-sm">
+            {{ log.action }}
+        </span>
+    {% endif %}
+</td>
+
+
+                        <!-- Content -->
+                        <td>
+                            {% if log.content %}
+                                <div class="small fw-medium text-dark">{{ log.content.text }}</div>
+
+                                <div class="small text-muted">
+                                    {{ log.content.created_at_ist|date:"d M Y, h:i A" }} IST
+                                </div>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Moderation Reasons -->
+                        <td>
+                            {% if log.moderation_result and log.moderation_result.reasons %}
+                                <ul class="small text-muted ps-3 mb-0">
+                                    {% for reason in log.moderation_result.reasons %}
+                                        <li>{{ reason }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Notes -->
+                        <td>
+                            {% if log.notes %}
+                                <div class="small text-muted" style="white-space:pre-line;">
+                                    {{ log.notes }}
+                                </div>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            No logs found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

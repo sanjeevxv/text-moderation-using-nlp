@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% load moderation_filters %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'dashboard_home' %}" class="btn btn-light border rounded-pill shadow-sm px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="fas fa-flag text-danger me-2"></i> Flagged Comments
+        </h2>
+
+        <div></div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Role Banner -->
+    {% if user.role == "admin" or user.role == "moderator" %}
+    <div class="alert alert-primary shadow-sm rounded-3 d-flex align-items-center mb-4">
+        <i class="fas fa-shield-alt fa-lg me-3"></i>
+        <div>
+            <strong>Moderator Panel:</strong> Review and handle flagged content responsibly.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Card -->
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th>User</th>
+                            <th>Comment</th>
+                            <th style="min-width: 320px;">Analysis Summary</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for comment in comments %}
+                            {% with result=moderation_results|get_item:comment.id %}
+                            <tr class="border-bottom 
+                                {% if result.safe_score < 0.35 %}table-danger
+                                {% elif result.safe_score < 0.7 %}table-warning
+                                {% endif %}
+                            ">
+
+                                <!-- USER -->
+                                <td>
+                                    <strong class="text-dark">
+                                        <i class="fas fa-user-circle me-1 text-secondary"></i>
+                                        {{ comment.user.username }}
+                                    </strong>
+                                    <div class="small text-muted">
+                                        Posted {{ comment.created_at|timesince }} ago
+                                    </div>
+                                </td>
+
+                                <!-- COMMENT -->
+                                <td style="max-width: 320px;">
+                                    <div class="p-2 border rounded bg-light small text-break shadow-sm">
+                                        {{ comment.text }}
+                                    </div>
+                                </td>
+
+                                <!-- ANALYSIS SUMMARY -->
+                                <td>
+                                    {% if result %}
+                                    <div class="d-flex flex-column gap-3 small">
+
+                                        <!-- SPAM -->
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-envelope text-secondary me-1"></i> Spam</span>
+                                                <span class="badge bg-{{ result.spam_score|score_color }} rounded-pill">
+                                                    {{ result.spam_score|multiply:100|floatformat:1 }}%
+                                                </span>
+                                            </div>
+                                            <div class="progress mt-1" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ result.spam_score|score_color }}"
+                                                     style="width: {{ result.spam_score|multiply:100 }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- PHISHING -->
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-link text-secondary me-1"></i> Phishing</span>
+                                                <span class="badge bg-{{ result.phishing_score|score_color }} rounded-pill">
+                                                    {{ result.phishing_score|multiply:100|floatformat:1 }}%
+                                                </span>
+                                            </div>
+                                            <div class="progress mt-1" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ result.phishing_score|score_color }}"
+                                                     style="width: {{ result.phishing_score|multiply:100 }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- TOXICITY -->
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-biohazard text-secondary me-1"></i> Toxicity</span>
+                                                <span class="badge bg-{{ result.toxic_score|score_color }} rounded-pill">
+                                                    {{ result.toxic_score|multiply:100|floatformat:1 }}%
+                                                </span>
+                                            </div>
+                                            <div class="progress mt-1" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ result.toxic_score|score_color }}"
+                                                     style="width: {{ result.toxic_score|multiply:100 }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- DRUG -->
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-capsules text-secondary me-1"></i> Drug-related</span>
+                                                <span class="badge bg-{{ result.drug_score|score_color }} rounded-pill">
+                                                    {{ result.drug_score|multiply:100|floatformat:1 }}%
+                                                </span>
+                                            </div>
+                                            <div class="progress mt-1" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ result.drug_score|score_color }}"
+                                                     style="width: {{ result.drug_score|multiply:100 }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SAFETY SCORE -->
+                                        <div class="pt-2 mt-1 border-top">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-semibold">
+                                                    <i class="fas fa-shield-alt me-1"></i> Safety Score
+                                                </span>
+                                                <span class="badge bg-{{ result.safe_score|safe_score_color }} rounded-pill fs-6 shadow-sm px-3">
+                                                    {{ result.safe_score|multiply:100|floatformat:0 }}%
+                                                </span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 8px;">
+                                                <div class="progress-bar bg-{{ result.safe_score|safe_score_color }}"
+                                                     style="width: {{ result.safe_score|multiply:100 }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    {% endif %}
+                                </td>
+
+                                <!-- ACTIONS -->
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm shadow-sm rounded-pill">
+
+                                        <a href="{% url 'moderation:review_content' comment.id %}"
+                                           class="btn btn-outline-primary rounded-start px-3">
+                                            <i class="fas fa-eye me-1"></i> Review
+                                        </a>
+
+                                        <!-- <button class="btn btn-outline-success px-3"
+                                                onclick="quickAction({{ comment.id }}, 'approve')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+
+                                        <button class="btn btn-outline-danger rounded-end px-3"
+                                                onclick="quickAction({{ comment.id }}, 'reject')">
+                                            <i class="fas fa-times"></i>
+                                        </button> -->
+                                    </div>
+                                </td>
+
+                            </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p class="mb-0">No flagged comments to review</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

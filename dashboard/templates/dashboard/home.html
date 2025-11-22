@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>SafeNet Dashboard</h2>
+  <div>
+    <span class="badge bg-{% if user.role == 'admin' %}danger{% elif user.role == 'moderator' %}warning{% else %}primary{% endif %} fs-6">
+      {{ user.role|title }}
+    </span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card text-bg-light shadow-sm rounded-3">
+      <div class="card-body">
+        <div class="h5">Total Content</div>
+        <div class="display-6">{{ stats.total_content }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-warning shadow-sm rounded-3">
+      <div class="card-body">
+        <div class="h5">Flagged</div>
+        <div class="display-6">{{ stats.flagged_content }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-danger shadow-sm rounded-3">
+      <div class="card-body">
+        <div class="h5">Banned Users</div>
+        <div class="display-6">{{ stats.banned_users }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Buttons -->
+<div class="mt-4">
+  <a href="{% url 'moderation:post_comment' %}" class="btn btn-success">Post a Comment</a>
+  <a href="{% url 'moderation:my_comments' %}" class="btn btn-outline-secondary">My Comments</a>
+
+  {% if user.role == "admin" or user.role == "moderator" %}
+    <a href="{% url 'moderation:flagged_comments' %}" class="btn btn-outline-warning">
+      <i class="bi bi-flag"></i> Flagged Comments ({{ stats.flagged_content }})
+    </a>
+    <a href="{% url 'audit_logs' %}" class="btn btn-outline-info">
+      <i class="bi bi-journal-text"></i> Audit Logs
+    </a>
+  {% endif %}
+
+  {% if user.role == "admin" %}
+    <a href="{% url 'manage_users' %}" class="btn btn-outline-primary">
+      <i class="bi bi-people"></i> Manage Users
+    </a>
+    <a href="/admin/" class="btn btn-outline-danger" target="_blank">
+      <i class="bi bi-gear"></i> Admin Panel
+    </a>
+  {% endif %}
+</div>
+
+<!-- Content Section -->
+<div class="row mt-4">
+
+  <!-- Quick Post -->
+  <div class="col-md-6">
+    <h4>Quick Post</h4>
+    <form method="post" action="{% url 'moderation:post_comment' %}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+
+  <!-- Restricted Words + Recent Comments -->
+  <div class="col-md-6">
+
+    <!-- Restricted Words -->
+    {% if user.role == "admin" or user.role == "moderator" %}
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Manage Restricted Words</h5>
+      </div>
+      <div class="card-body">
+
+        {% if slang_form %}
+        <form method="post" action="{% url 'moderation:manage_slang' %}" class="mb-3">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          {% csrf_token %}
+          <div class="row g-2">
+            <div class="col-7">{{ slang_form.word }}</div>
+            <div class="col-3">{{ slang_form.action }}</div>
+            <div class="col-2">
+              <button type="submit" class="btn btn-primary w-100">
+                Submit <i class="bi bi-send"></i>
+              </button>
+            </div>
+          </div>
+
+          {% if slang_form.errors %}
+            <div class="alert alert-danger mt-2 p-2 small">
+              {% for field, errors in slang_form.errors.items %}
+                {% for error in errors %}
+                  {{ error }}<br>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </form>
+        {% endif %}
+
+        <div class="small text-muted mb-2">
+          <i class="bi bi-info-circle"></i> Words here are blocked in all posts.
+        </div>
+
+        <div class="d-flex flex-wrap gap-1">
+          {% for word in slang_words|slice:":10" %}
+            <span class="badge bg-secondary">
+              {{ word.word }}
+              <form method="post" action="{% url 'moderation:delete_slang_word' word.id %}"
+                    class="d-inline ms-1"
+                    onsubmit="return confirm('Remove this word?')">
+                {% csrf_token %}
+                <button type="submit" class="btn-close btn-close-white" style="font-size: 0.6rem;"></button>
+              </form>
+            </span>
+          {% empty %}
+            <span class="text-muted">No restricted words added yet.</span>
+          {% endfor %}
+
+          {% if slang_words|length > 10 %}
+            <a href="{% url 'moderation:manage_slang' %}" class="small ms-2">View all ({{ slang_words|length }})</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Comments -->
+    <h4>Recent Comments</h4>
+    <ul class="list-group shadow-sm">
+
+      {% for c in recent_comments %}
+        {% with result=c.moderation_results.first %}
+        <li class="list-group-item">
+
+          <!-- Row -->
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ c.user.username }}</strong>: {{ c.text }}
+              <div class="small text-muted">
+                {{ c.created_at_ist|date:"d M Y, h:i A" }} IST
+              </div>
+
+              <!-- Moderation Reasons -->
+              {% if result and result.reasons %}
+                <div class="mt-1">
+                  <span class="text-muted small fw-bold">Reasons:</span>
+                  <ul class="small text-muted ms-3 mb-1">
+                    {% for r in result.reasons %}
+                      <li>{{ r }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Status -->
+            <div class="text-end">
+              {% if c.status == 'safe' %}
+                <span class="badge bg-success">Safe</span>
+              {% elif c.status == 'flagged' %}
+                <span class="badge bg-warning">Review</span>
+              {% elif c.status == 'banned' %}
+                <span class="badge bg-danger">Banned</span>
+              {% endif %}
+
+              {% if result %}
+                <div class="small text-muted">
+                  {{ result.final_label|title }} ({{ result.safe_score|floatformat:2 }})
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+        </li>
+        {% endwith %}
+      {% empty %}
+        <li class="list-group-item text-muted">No comments yet.</li>
+      {% endfor %}
+    </ul>
+
+  </div>
+</div>
+
+{% endblock %}
+ 

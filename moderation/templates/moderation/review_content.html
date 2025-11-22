@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load percent_filters %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{% url 'dashboard_home' %}" class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm px-3">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+    <h2 class="fw-bold mb-0 text-dark">Review Content</h2>
+    <div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h5>Content Details</h5>
+  </div>
+  <div class="card-body">
+    <p><strong>User:</strong> {{ content.user.username }}</p>
+    <p><strong>Posted at:</strong> {{ content.created_at }}</p>
+    <p><strong>Status:</strong>
+      {% if content.status == 'safe' %}
+        <span class="badge bg-success">Safe</span>
+      {% elif content.status == 'flagged' %}
+        <span class="badge bg-warning">Flagged</span>
+      {% elif content.status == 'banned' %}
+        <span class="badge bg-danger">Banned</span>
+      {% endif %}
+    </p>
+    <p><strong>Content:</strong></p>
+    <blockquote class="blockquote">
+      <p>{{ content.text }}</p>
+    </blockquote>
+  </div>
+</div>
+
+{% if moderation_result %}
+<div class="card mt-3">
+  <div class="card-header">
+    <h5>Moderation Results</h5>
+  </div>
+  <div class="card-body">
+    <p><strong>Label:</strong> {{ moderation_result.label|title }}</p>
+    <p><strong>Confidence:</strong> {{ moderation_result.confidence_score|to_percent:1 }}</p>
+    <p><strong>Action:</strong> {{ moderation_result.action|title }}</p>
+
+    <h6>Detailed Scores:</h6>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card border-danger">
+          <div class="card-body text-center">
+            <h6 class="card-title text-danger">Spam Detection</h6>
+            <div class="mb-2">
+              {% if moderation_result.spam_score >= 0.6 %}
+                <span class="badge bg-danger fs-6">🚨 SPAM {{ moderation_result.spam_score|to_percent:1 }}%</span>
+              {% else %}
+                <span class="badge bg-success fs-6">✅ HAM {{ moderation_result.ham_score|to_percent:1 }}%</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">Spam: {{ moderation_result.spam_score|to_percent:1 }}% | Ham: {{ moderation_result.ham_score|to_percent:1 }}%</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-warning">
+          <div class="card-body text-center">
+            <h6 class="card-title text-warning">Fraud Detection</h6>
+            <div class="mb-2">
+              {% if moderation_result.phishing_score >= 0.6 %}
+                <span class="badge bg-danger fs-6">🚨 PHISHING {{ moderation_result.phishing_score|to_percent:1 }}%</span>
+              {% else %}
+                <span class="badge bg-success fs-6">✅ LEGIT {{ moderation_result.legitimate_score|to_percent:1 }}%</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">Phishing: {{ moderation_result.phishing_score|to_percent:1 }}% | Legit: {{ moderation_result.legitimate_score|to_percent:1 }}%</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-info">
+          <div class="card-body text-center">
+            <h6 class="card-title text-info">Drug Detection</h6>
+            <div class="mb-2">
+              {% if moderation_result.drug_score >= 0.6 %}
+                <span class="badge bg-danger fs-6">🚨 DRUG {{ moderation_result.drug_score|to_percent:1 }}%</span>
+              {% else %}
+                <span class="badge bg-success fs-6">✅ CLEAN {{ moderation_result.legitimate_score|to_percent:1 }}%</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">
+              Drug: {{ moderation_result.drug_score|to_percent:1 }}% | 
+              Clean: {{ moderation_result.legitimate_score|to_percent:1 }}%
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-primary">
+          <div class="card-body text-center">
+            <h6 class="card-title text-primary">Toxicity Detection</h6>
+            <div class="mb-2">
+              {% if moderation_result.toxic_score >= 0.6 %}
+                <span class="badge bg-danger fs-6">🚨 TOXIC {{ moderation_result.toxic_score|to_percent:1 }}%</span>
+              {% else %}
+                <span class="badge bg-success fs-6">✅ NON-TOXIC {{ moderation_result.non_toxic_score|to_percent:1 }}%</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">
+              Toxic: {{ moderation_result.toxic_score|to_percent:1 }}% | 
+              Non-Toxic: {{ moderation_result.non_toxic_score|to_percent:1 }}%
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-success">
+          <div class="card-body text-center">
+            <h6 class="card-title text-success">Overall Status</h6>
+            <div class="mb-2">
+              {% if moderation_result.label == 'safe' %}
+                <span class="badge bg-success fs-6">✅ SAFE {{ moderation_result.confidence_score|to_percent:1 }}%</span>
+              {% elif moderation_result.label == 'review' %}
+                <span class="badge bg-warning fs-6">⚠️ REVIEW {{ moderation_result.confidence_score|to_percent:1 }}%</span>
+              {% else %}
+                <span class="badge bg-danger fs-6">❌ UNSAFE {{ moderation_result.confidence_score|to_percent:1 }}%</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">Final Decision</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card mt-3">
+  <div class="card-header">
+    <h5>Moderator Actions</h5>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="action" class="form-label">Action:</label>
+        <select class="form-select" name="action" required>
+          <option value="approve">Approve</option>
+          <option value="reject">Reject</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="notes" class="form-label">Notes (optional):</label>
+        <textarea class="form-control" name="notes" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Decision</button>
+      <a href="{% url 'moderation:flagged_comments' %}" class="btn btn-secondary">Back to List</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

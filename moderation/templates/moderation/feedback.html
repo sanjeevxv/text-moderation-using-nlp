@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Give Feedback</h2>
+<div class="card mb-3">
+  <div class="card-body">
+    <div><strong>Label:</strong> {{ result.label }} ({{ result.confidence_score }})</div>
+    <div class="mt-2"><strong>Content:</strong> {{ result.content.text }}</div>
+  </div>
+  </div>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Submit Feedback</button>
+</form>
+{% endblock %}
+

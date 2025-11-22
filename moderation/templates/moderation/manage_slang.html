@@ -1,0 +1,70 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Manage Restricted Words</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'moderation:manage_slang_words' %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-6">
+                                <label for="{{ form.word.id_for_label }}" class="form-label">Word/Phrase</label>
+                                {{ form.word }}
+                                {% if form.word.help_text %}
+                                    <div class="form-text">{{ form.word.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.action.id_for_label }}" class="form-label">Action</label>
+                                {{ form.action }}
+                                {% if form.action.help_text %}
+                                    <div class="form-text">{{ form.action.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-send-fill me-1"></i> Submit
+                                </button>
+                            </div>
+                        </div>
+                        {% if form.errors %}
+                            <div class="alert alert-danger mt-3">
+                                <strong>Please fix the following errors:</strong>
+                                <ul class="mb-0 mt-2">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field|title }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </form>
+
+                    <h5>Current Restricted Words</h5>
+                    {% if slang_words %}
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            {% for word in slang_words %}
+                                <span class="badge bg-secondary p-2 d-flex align-items-center">
+                                    {{ word.word }}
+                                    <form method="post" action="{% url 'moderation:delete_slang_word' word.id %}" class="ms-2" onsubmit="return confirm('Are you sure you want to remove this word?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-close btn-close-white" aria-label="Remove"></button>
+                                    </form>
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No restricted words added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

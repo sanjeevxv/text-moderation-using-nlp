@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3>Confirm User Ban</h3>
+        </div>
+        <div class="card-body">
+          <p>Are you sure you want to ban the user <strong>{{ target_user.username }}</strong>?</p>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="reason" class="form-label">Reason for ban (optional):</label>
+              <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Enter reason for banning this user"></textarea>
+            </div>
+
+            <input type="hidden" name="action" value="ban">
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-danger">Confirm Ban</button>
+              <a href="{% url 'manage_users' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
