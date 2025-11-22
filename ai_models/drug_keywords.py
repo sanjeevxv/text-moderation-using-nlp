@@ -1,0 +1,23 @@
+DRUG_KEYWORDS = {
+    "weed": 0.70,
+    "marijuana": 0.75,
+    "cannabis": 0.70,
+    "pot": 0.55,
+    "joint": 0.50,
+    "coke": 0.80,
+    "cocaine": 0.90,
+    "heroin": 0.95,
+    "meth": 0.90,
+    "methamphetamine": 0.95,
+    "lsd": 0.85,
+    "acid": 0.60,
+    "mdma": 0.80,
+    "ecstasy": 0.85,
+    "molly": 0.80,
+    "shrooms": 0.75,
+    "mushrooms": 0.70,
+    "crystal": 0.60,
+    "dealer": 0.65,
+    "narcotics": 0.70,
+    "illegal substances": 0.70
+}
